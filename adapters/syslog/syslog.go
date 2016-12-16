@@ -177,6 +177,7 @@ func (a *SyslogAdapter) reconnect() error {
 func retryExp(fun func() error, tries uint) error {
 	try := uint(0)
 	for {
+		log.Printf("syslog: reconnect attempt %v\n", try)
 		err := fun()
 		if err == nil {
 			return nil
@@ -187,6 +188,7 @@ func retryExp(fun func() error, tries uint) error {
 			return err
 		}
 
+		log.Printf("syslog: reconnect attempt %v failed - sleeping for %v\n",try, ((1 << try) * 10 * time.Millisecond))
 		time.Sleep((1 << try) * 10 * time.Millisecond)
 	}
 }

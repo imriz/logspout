@@ -2,7 +2,8 @@ package tcp
 
 import (
 	"net"
-
+	"log"
+	"time"
 	"github.com/gliderlabs/logspout/adapters/raw"
 	"github.com/gliderlabs/logspout/router"
 )
@@ -21,13 +22,17 @@ func rawTCPAdapter(route *router.Route) (router.LogAdapter, error) {
 type tcpTransport int
 
 func (_ *tcpTransport) Dial(addr string, options map[string]string) (net.Conn, error) {
+	log.Printf("tcp: Resolving %v\n", addr)
 	raddr, err := net.ResolveTCPAddr("tcp", addr)
 	if err != nil {
 		return nil, err
 	}
-	conn, err := net.DialTCP("tcp", nil, raddr)
+	log.Printf("tcp: Connecting to %v\n", raddr)
+	conn, err := net.DialTimeout("tcp", addr,time.Duration(10)*time.Second)
 	if err != nil {
+	        log.Printf("tcp: Error connecting to %v\n", raddr)
 		return nil, err
 	}
+	log.Printf("tcp: Connected to %v\n", raddr)
 	return conn, nil
 }

@@ -195,7 +195,7 @@ func (p *LogsPump) pumpLogs(event *docker.APIEvents, backlog bool, inactivityTim
 				Stdout:            true,
 				Stderr:            true,
 				Follow:            true,
-				Tail:              "20000",
+				Tail:              "6000",
 				Since:             sinceTime.Unix(),
 				InactivityTimeout: inactivityTimeout,
 			})

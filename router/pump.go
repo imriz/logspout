@@ -168,11 +168,15 @@ func (p *LogsPump) pumpLogs(event *docker.APIEvents, backlog bool, inactivityTim
 	}
 
 	var sinceTime time.Time
+	var tail = "0"
+
 	if backlog {
 		sinceTime = time.Unix(0, 0)
+		tail = "all"
 	} else {
 		sinceTime = time.Now()
 	}
+
 
 	p.mu.Lock()
 	if _, exists := p.pumps[id]; exists {
@@ -195,7 +199,7 @@ func (p *LogsPump) pumpLogs(event *docker.APIEvents, backlog bool, inactivityTim
 				Stdout:            true,
 				Stderr:            true,
 				Follow:            true,
-				Tail:              "6000",
+				Tail:              tail,
 				Since:             sinceTime.Unix(),
 				InactivityTimeout: inactivityTimeout,
 			})
@@ -204,6 +208,8 @@ func (p *LogsPump) pumpLogs(event *docker.APIEvents, backlog bool, inactivityTim
 			} else {
 				debug("pump.pumpLogs():", id, "stopped")
 			}
+			
+			tail = "2000"
 
 			sinceTime = time.Now()
 			if err == docker.ErrInactivityTimeout {

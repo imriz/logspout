@@ -39,6 +39,12 @@ func getopt(name, dfault string) string {
 	return value
 }
 
+func debug(v ...interface{}) {
+        if os.Getenv("DEBUG") != "" {
+        	log.Println(v...)
+        }
+}
+
 func NewSyslogAdapter(route *router.Route) (router.LogAdapter, error) {
 	transport, found := router.AdapterTransports.Lookup(route.AdapterTransport("udp"))
 	if !found {
@@ -107,6 +113,7 @@ func (a *SyslogAdapter) Stream(logstream chan *router.Message) {
 		_, err = a.conn.Write(buf)
 		if err != nil {
 			log.Println("syslog:", err)
+			debug("syslog: retrying buf: ",string(buf))
 			switch a.conn.(type) {
 			case *net.UDPConn:
 				continue
@@ -116,6 +123,7 @@ func (a *SyslogAdapter) Stream(logstream chan *router.Message) {
 					log.Println("syslog:", err)
 					return
 				}
+			        debug("syslog: resent buf: ",string(buf))
 			}
 		}
 	}
@@ -129,9 +137,13 @@ func (a *SyslogAdapter) retry(buf []byte, err error) error {
 				return nil
 			}
 		}
-	}
+		return a.reconnect()
+	} else {
+		a.reconnect()
+		_, err = a.conn.Write(buf)
+		return err		 
+        }
 
-	return a.reconnect()
 }
 
 func (a *SyslogAdapter) retryTemporary(buf []byte) error {
